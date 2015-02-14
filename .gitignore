@@ -1,3 +1,4 @@
 uploads/*
 *.pyc
 db.sqlite3
+.vagrant/

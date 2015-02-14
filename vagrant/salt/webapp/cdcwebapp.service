@@ -1,0 +1,12 @@
+[Unit]
+Description=Django webapp for CDC
+After=mysqld.service
+
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStart=/usr/bin/python /srv/www/ISU2CDC15-WWW/manage.py runserver
+
+[Install]
+WantedBy=multi-user.target
