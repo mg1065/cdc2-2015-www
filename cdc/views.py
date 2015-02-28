@@ -1,4 +1,5 @@
 from django.shortcuts import render, render_to_response, redirect, get_object_or_404
+from django.core.urlresolvers import reverse
 from models import SiteUser, LoginSession, Testimonial
 from django.contrib.auth.models import User
 from django.http import HttpResponse, HttpResponseRedirect
@@ -17,14 +18,25 @@ def contact(request):
 def about(request):
   return render(request, 'cdc/about.html')
 
+
+# Testimonial Views
 def testimonials(request):
-  if request.GET.get('remove', False):
-    entry = Testimonial.objects.get(postedby=request.GET['remove'])
-    entry.delete()
   user = None
   if is_logged_in(request):
     user = get_user(request)
   return render(request, 'cdc/testimonials.html', { 'testimonials' : Testimonial.objects.all(), 'user' : user })
+
+def testimonials_delete(request, t_id):
+  entry = get_object_or_404(Testimonial, pk=t_id)
+  entry.delete()
+  return redirect(reverse('cdc:testimonials'))
+
+def form(request):
+  form = TestimonialForm(request.POST)
+  if form.is_valid():
+      form.save()
+      return redirect(reverse('cdc:testimonials'))
+  return render_to_response('cdc/form.html', {'form': form})
 
 def login(request):
   if is_logged_in(request): # or is_admin(request):
@@ -94,15 +106,6 @@ def upload(request):
     form = UploadFileForm()
   return render_to_response('cdc/upload.html', {'form': form})
 
-def form(request):
-  if request.method == 'POST':
-    form = TestimonialForm(request.POST, request.FILES)
-    entry = Testimonial(text=request.POST['text'], postedby=request.POST['postedby'])
-    entry.save()
-    return HttpResponseRedirect('testimonials')
-  else:
-    form = TestimonialForm()
-  return render_to_response('cdc/form.html', {'form': form})
 
 def success(request):
   return render(request, 'cdc/success.html')
