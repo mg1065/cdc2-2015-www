@@ -2,7 +2,7 @@ from django.shortcuts import render, render_to_response, redirect, get_object_or
 from django.core.urlresolvers import reverse
 from models import SiteUser, Testimonial
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.decorators import login_required, permission_required, user_passes_test
 from django.contrib.auth.models import User
 from django.http import HttpResponse, HttpResponseRedirect
 from .forms import *
@@ -25,7 +25,7 @@ def about(request):
 def testimonials(request):
   user = None
   if request.user.is_authenticated():
-    user = get_user(request)
+    user = request.user
   return render(request, 'cdc/testimonials.html', { 'testimonials' : Testimonial.objects.all(), 'user' : user })
 
 
@@ -54,7 +54,7 @@ def login_view(request):
   user = authenticate(username=username, password=pin)
   if user is not None:
     if user.is_active:
-      if user.site_user.company == company:
+      if user.siteuser.company == company:
         login(request, user)
         return redirect('cdc:index')
       else:
@@ -92,7 +92,7 @@ def logout_view(request):
 
 @login_required
 def account_home(request):
-  user = get_user(request)
+  user = request.user
   page = request.GET.get('page', False)
   success = request.GET.get('success', False)
   context = { 'user' : user, 'page' : page }
@@ -100,7 +100,7 @@ def account_home(request):
 
 @login_required
 def upload(request):
-  user = get_user(request).username
+  user = request.user.username
   if request.method == 'POST':
     form = UploadFileForm(request.POST, request.FILES)
     if form.is_valid():
@@ -116,16 +116,66 @@ def success(request):
 
 @login_required
 def filings(request):
-  user = get_user(request)
+  user = request.user
   files = list_files(user, '/incoming/')
   return render(request, 'cdc/files.html', { 'files' : files, 'user' : user, 'mode' : 'incoming' })
 
 @login_required
 def reports(request):
-  user = get_user(request)
+  user = request.user
   files = list_files(user, '/outgoing/')
   return render(request, 'cdc/files.html', { 'files' : files, 'user' : user, 'mode' : 'outgoing' })
 
+
+@user_passes_test(user_is_admin)
+def admin_dashboard(request):
+  pass
+
+
+@user_passes_test(user_is_admin)
+def admin_password_reset(request, user_id):
+  user = get_object_or_404(User, pk=user_id)
+  password = request.POST.get('pin', False)
+
+  if password:
+    user.set_password(password)
+    user.save()
+
+  return redirect(reverse('cdc:admin'))
+
+@user_passes_test(user_is_admin)
+def admin_delete_user(request, user_id):
+  user = get_object_or_404(User, pk=user_id)
+  user.delete()
+
+  return redirect(reverse('cdc:admin'))
+
+
+@user_passes_test(user_is_admin)
+def admin_new_user(request):
+  pass
+
+
+@user_passes_test(user_is_admin)
+def admin_new_admin(request):
+  pass
+
+
+@user_passes_test(user_is_admin)
+def admin_delete_file(request):
+  try:
+    os.remove(request.GET['delete'])
+  except OSError:
+    pass
+  return redirect(reverse('cdc:admin'))
+
+
+@user_passes_test(user_is_admin)
+def admin_list_user_files(request):
+  pass
+
+
+@user_passes_test(user_is_admin)
 def admin(request):
   message = ''
   files = None
@@ -135,23 +185,12 @@ def admin(request):
     create = 'newuser'
   elif request.GET.get('admin_button', False):
     create = 'newadmin'
-  # Password reset
-  if request.POST.get('pwreset', False):
-    user = get_object_or_404(User, username=request.POST['account'])
-    user.set_password(request.POST.get('pin', False))
-    user.save()
-    message += 'Password successfully reset!\n'
-  # Delete User
-  if request.POST.get('delete', False):
-    user = get_object_or_404(User, username=request.POST['account'])
-    user.delete()
-    message += 'User successfully deleted!\n'
   # Create new site user
   if request.POST.get('newuser', False):
     if User.objects.filter(username=request.POST.get('account', False)).exists():
       message += 'Error: User already exists in database.\n'
     else:
-      user = User.objects.create_user(request.POST.get('account', False), '', request.POST.get('pin', False))
+      user = User(username=request.POST.get('account'), password=request.POST.get('pin'))
       siteuser = SiteUser(user=user, company=request.POST.get('company', False))
       siteuser.save()
       # Create the upload and download directories for the new user
@@ -173,13 +212,6 @@ def admin(request):
       siteuser = SiteUser(user=user, company="Admin")
       siteuser.save()
       message += 'Admin successfully created!\n'
-  # Delete a file
-  if request.GET.get('delete', False):
-    try:
-      os.remove(request.GET['delete'])
-      message += 'File \'' + request.GET['delete'] + '\' deleted!\n'
-    except OSError:
-      message += 'That file does not exist.\n'
   # List a user's files
   if request.GET.get('search', False):
     files = list_files(request.GET.get('search', ''), '/' + request.GET.get('mode', ''))
@@ -187,6 +219,6 @@ def admin(request):
       message += "No files found!\n"
   if request.GET.get('list_users', False):
     accounts = User.objects.all()
-  if get_user(request) and get_user(request).is_superuser:
-    return render(request, 'cdc/account.html', { 'users' : accounts, 'create' : create, 'message' : message, 'files' : files, 'mode' : request.GET.get('mode', False), 'search' : request.GET.get('search', False), 'user' : get_user(request) })
-  return HttpResponseRedirect('login/admin')
+  if request.user and request.user.is_superuser:
+    return render(request, 'cdc/account.html', { 'users' : accounts, 'create' : create, 'message' : message, 'files' : files, 'mode' : request.GET.get('mode', False), 'search' : request.GET.get('search', False), 'user' : request.user })
+  return redirect(reverse('cdc:login_admin'))

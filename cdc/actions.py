@@ -11,6 +11,10 @@ def handle_uploaded_file(f, title, user):
     for chunk in f.chunks():
       destination.write(chunk)
 
+
+def user_is_admin(user):
+  return user.is_superuser
+
 def is_admin(request):
   return request.user.is_superuser
 
