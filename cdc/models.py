@@ -1,4 +1,6 @@
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch.dispatcher import receiver
 from django.contrib.auth.models import User
 
 class SiteUser(models.Model):
@@ -9,11 +11,6 @@ class SiteUser(models.Model):
   user = models.OneToOneField(User)
   company = models.CharField(default='', max_length=100)
 
-class LoginSession(models.Model):
-  def __str__(self):
-    return self.token
-  token = models.CharField(default='', max_length=64)
-  user = models.CharField(default='', max_length=100)
 
 class Testimonial(models.Model):
   def __str__(self):
@@ -21,3 +18,9 @@ class Testimonial(models.Model):
   text = models.TextField(default='', max_length=1000)
   postedby = models.CharField(default='', max_length=1000)
   email = models.CharField(default='', max_length=100)
+
+@receiver(post_save, sender=User)
+def create_site_user_on_create(sender, instance, created, **kwargs):
+  if created:
+    su = SiteUser(user=instance)
+    su.save()

@@ -40,6 +40,11 @@ MySQL-python:
       - pkg: gcc
       - pkg: redhat-rpm-config
 
+dj-database-url:
+  pip.installed:
+    - require:
+      - pkg: python-pip
+
 mariadb-devel:
   pkg.installed
 
