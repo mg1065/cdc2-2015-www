@@ -1,0 +1,16 @@
+{% extends 'cdc/base.html' %}
+{% block title %}Admin -- Create Admin{% endblock %}
+{% block content %}
+<br/><br/>
+<div id="account">
+    <h2>Admin Panel -- {{ user.username }}</h2>
+    <p id="message">{{ message }}</p>
+    <strong>New Admin</strong>
+    <form method="post">
+        {% csrf_token %}
+        <input type="text" name="username" placeholder="Username" />
+        <input type="password" name="password" placeholder="Password" />
+        <input type="submit" value="Submit" />
+    </form>
+</div>
+{% endblock %}

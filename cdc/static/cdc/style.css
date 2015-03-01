@@ -235,3 +235,8 @@ body {
 #userlist {
   float: left;
 }
+
+#message {
+    font-color: white;
+    color: white;
+}

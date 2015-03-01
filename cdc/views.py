@@ -137,37 +137,49 @@ def reports(request):
 
 @user_passes_test(user_is_admin)
 def admin_dashboard(request):
-    pass
+    return render(request, 'cdc/account.html')
 
 
 @user_passes_test(user_is_admin)
-def admin_password_reset(request, user_id):
-    user = get_object_or_404(User, pk=user_id)
-    password = request.POST.get('pin', False)
+def admin_password_reset(request):
+    pin_form = PinResetForm(request.POST)
 
-    if password:
-        user.set_password(password)
+    if pin_form.is_valid():
+        user = get_object_or_404(User, username=pin_form.cleaned_data['account'])
+        user.set_password(pin_form.cleaned_data['pin'])
         user.save()
 
     return redirect(reverse('cdc:admin'))
 
 
 @user_passes_test(user_is_admin)
-def admin_delete_user(request, user_id):
-    user = get_object_or_404(User, pk=user_id)
-    user.delete()
+def admin_delete_user(request):
+    delete_form = DeleteUserForm(request.POST)
+
+    if delete_form.is_valid():
+        user = get_object_or_404(User, username=delete_form.cleaned_data['account'])
+        user.delete()
 
     return redirect(reverse('cdc:admin'))
 
 
 @user_passes_test(user_is_admin)
 def admin_new_user(request):
-    pass
+    user_form = NewUserForm(request.POST)
+    if user_form.is_valid():
+        user = user_form.save()
+        create_user_uploads(user)
+        return redirect(reverse('cdc:admin'))
+    return render(request, 'cdc/admin/new_user.html', {'form': user_form})
 
 
 @user_passes_test(user_is_admin)
 def admin_new_admin(request):
-    pass
+    admin_form = NewAdminForm(request.POST)
+    if admin_form.is_valid():
+        admin = admin_form.save()
+        return redirect(reverse('cdc:admin'))
+    return render(request, 'cdc/admin/new_admin.html', {'form': admin_form})
 
 
 @user_passes_test(user_is_admin)
@@ -194,34 +206,7 @@ def admin(request):
         create = 'newuser'
     elif request.GET.get('admin_button', False):
         create = 'newadmin'
-    # Create new site user
-    if request.POST.get('newuser', False):
-        if User.objects.filter(username=request.POST.get('account', False)).exists():
-            message += 'Error: User already exists in database.\n'
-        else:
-            user = User(username=request.POST.get('account'), password=request.POST.get('pin'))
-            siteuser = SiteUser(user=user, company=request.POST.get('company', False))
-            siteuser.save()
-            # Create the upload and download directories for the new user
-            targetdir = 'uploads/' + user.username
-            if not os.path.exists(targetdir):
-                os.makedirs(targetdir + '/incoming')
-                os.chmod(targetdir + '/incoming', 0777)
-                os.makedirs(targetdir + '/outgoing')
-                os.chmod(targetdir + '/outgoing', 0777)
-            message += 'User successfully created!\n'
-    # Create new admin
-    if request.POST.get('newadmin', False):
-        if User.objects.filter(username=request.POST.get('account', False)).exists():
-            message += 'Error: User already exists in database.\n'
-        else:
-            user = User.objects.create_user(request.POST.get('username', False), '',
-                                            request.POST.get('password', False))
-            user.is_superuser = True
-            user.save()
-            siteuser = SiteUser(user=user, company="Admin")
-            siteuser.save()
-            message += 'Admin successfully created!\n'
+
     # List a user's files
     if request.GET.get('search', False):
         files = list_files(request.GET.get('search', ''), '/' + request.GET.get('mode', ''))

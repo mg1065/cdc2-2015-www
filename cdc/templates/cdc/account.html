@@ -1,54 +1,34 @@
 {% extends 'cdc/base.html' %}
 {% load staticfiles %}
 {% block title %}{% if user.is_superuser %}Admin Home{% else %}Account Home{% endif %}{% endblock %}
-{% block login %}<li><a href="{% url 'cdc:logout' %}">Log Out</a></li>{% endblock %}
 {% block content %}
 <br/><br/>
 <div id="account">
     <h2>{% if user.is_superuser %}Admin Panel -- {{ user.username }}{% else %}Welcome {{ user.siteuser.company }}!{% endif %}</h2>
     {% if user.is_superuser %}
         <p style='font-color: white'>{{ message }}</p>
-        {% if create == 'newuser' %}
-        <strong>New Site User</strong>
-        <form action="{% url 'cdc:admin' %}" method="post">
-            <input type="text" name="company" placeholder="Company Name">
-            <input type="text" name="account" placeholder="Account #">
-            <input type="password" name="pin" size="4" maxlength="4" placeholder="PIN">
-            <input type="submit" value="Submit">
-            <input type="hidden" name="newuser" value="newuser">
-        </form><a href="admin"><button>Cancel</button></a></br>
-        {% elif create == 'newadmin' %}
-        <strong>New Admin User</strong>
-        <form action="{% url 'cdc:admin' %}" method="post">
-            <input type="text" name="username" placeholder="Username">
-            <input type="password" name="password" placeholder="Password">
-            <input type="submit" value="Submit">
-            <input type="hidden" name="newadmin" value="newadmin">
-        </form>
-        <a href="admin"><button>Cancel</button></a></br>
-        {% else %}
         <strong>User Creation</strong>
-        <form action="{% url 'cdc:admin' %}" method="get">
-            <input type="submit" name="user_button" value="New User">
-            <input type="submit" name="admin_button" value="New Admin">
-        </form>
-        {% endif %}
+        <div>
+            <input type="button" value="New User" onclick="window.location='{% url 'cdc:admin_new_user' %}'" />
+            <input type="button" value="New Admin" onclick="window.location='{% url 'cdc:admin_new_admin' %}'" />
+        </div>
         <strong>PIN Reset</strong>
-        <form action="{% url 'cdc:admin' %}" method="post">
+        <form action="{% url 'cdc:admin_password_reset' %}" method="post">
+            {% csrf_token %}
             <input type="text" name="account" placeholder="Account #">
             <input type="password" name="pin" size="4" maxlength="4" placeholder="PIN">
             <input type="submit" value="Submit">
-            <input type="hidden" name="pwreset" value="pwreset">
         </form>
         <strong>Delete Site User</strong>
-        <form action="{% url 'cdc:admin' %}" method="post">
+        <form action="{% url 'cdc:admin_delete_user' %}" method="post">
+            {% csrf_token %}
             <input type="text" name="account" placeholder="Account #">
             <input type="submit" value="Submit">
-            <input type="hidden" name="delete" value="newuser">
         </form>
         <strong>File Admin</strong>
-        <form action="{% url 'cdc:admin' %}" method="get">
-            <input type="text" name="search" placeholder="Account #">
+        <form action="{% url 'cdc:admin_list_user_files' %}" method="post">
+            {% csrf_token %}
+            <input type="text" name="account" placeholder="Account #">
             <select name="mode">
                 <option value="incoming">Filings</option>
                 <option value="outgoing">Reports</option>

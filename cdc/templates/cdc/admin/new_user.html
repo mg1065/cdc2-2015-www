@@ -1,0 +1,17 @@
+{% extends 'cdc/base.html' %}
+{% block title %}Admin - Create User{% endblock %}
+{% block content %}
+<br/><br/>
+<div id="account">
+    <h2>Admin Panel -- {{ user.username }}</h2>
+    <p id="message">{{ form.errors }}</p>
+    <strong>New User</strong>
+    <form method="post">
+        {% csrf_token %}
+        <input type="text" name="{{ form.account.name }}" placeholder="Account #" />
+        <input type="text" name="{{ form.company.name }}" placeholder="Company" />
+        <input type="password" name="{{ form.pin.name }}" maxlength="4" placeholder="PIN" />
+        <input type="submit" value="Submit" />
+    </form>
+</div>
+{% endblock %}
