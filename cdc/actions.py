@@ -25,7 +25,7 @@ def list_files(account, mode):
     if os.path.exists(targetdir):
         return [f for f in listdir(targetdir)]
     else:
-        return False
+        return None
 
 
 def create_user_uploads(user):
