@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.shortcuts import render, render_to_response, redirect, get_object_or_404
 from django.core.urlresolvers import reverse
 from models import SiteUser, Testimonial
@@ -183,10 +184,17 @@ def admin_new_admin(request):
 
 @user_passes_test(user_is_admin)
 def admin_delete_file(request):
-    try:
-        os.remove(request.GET['delete'])
-    except OSError:
-        pass
+    account = get_object_or_404(User, username=request.POST.get('account', None))
+    mode = request.POST.get('mode', False)
+    file = request.POST.get('file', False)
+
+    if not mode or not file:
+        messages.error(request, "Invalid file")
+    else:
+        try:
+            delete_file(account, mode, file)
+        except OSError:
+            messages.error(request, "Error deleting file")
     return redirect(reverse('cdc:admin'))
 
 

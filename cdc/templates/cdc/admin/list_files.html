@@ -7,7 +7,14 @@
     <strong>Files that are {{ mode }} for {{ account }}</strong>
     <ol>
         {% for file in files %}
-        <li><a href="/uploads/{{ account }}/{{ mode }}/{{ file }}">{{ file }}</a></li>
+        <li><a href="/uploads/{{ account }}/{{ mode }}/{{ file }}">{{ file }}</a>
+            <form action="{% url 'cdc:admin_delete_file' %}" method="post">
+                <input type="hidden" name="account" value="{{ account }}" />
+                <input type="hidden" name="mode" value="{{ mode }}" />
+                <input type="hidden" name="file" value="{{ file }}" />
+                <button type="submit">Delete</button>
+            </form>
+        </li>
         {% empty %}
         <li>No Files Found</li>
         {% endfor %}

@@ -21,11 +21,19 @@ def is_admin(request):
 
 
 def list_files(account, mode):
-    targetdir = os.path.join('uploads', account.username, mode)
+    targetdir = os.path.join(settings.MEDIA_ROOT, account.username, mode)
     if os.path.exists(targetdir):
         return [f for f in listdir(targetdir)]
     else:
         return None
+
+
+def delete_file(account, mode, file):
+    targetfile = os.path.join(settings.MEDIA_ROOT, account.username, mode, file)
+    if os.path.exists(targetfile):
+        os.remove(targetfile)
+    else:
+        return False
 
 
 def create_user_uploads(user):
