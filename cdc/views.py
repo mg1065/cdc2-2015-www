@@ -40,7 +40,7 @@ def testimonials_delete(request, t_id):
 
 
 def form(request):
-    form = TestimonialForm(request.POST)
+    form = TestimonialForm(request.POST or None)
     if form.is_valid():
         form.save()
         return redirect(reverse('cdc:testimonials'))
@@ -51,23 +51,16 @@ def login_view(request):
     if request.user.is_authenticated():
         return redirect('cdc:index')
 
-    username = request.POST.get('account', None)
-    company = request.POST.get('company', None)
-    pin = request.POST.get('pin', None)
+    form = LoginForm(request.POST or None)
 
-    user = authenticate(username=username, password=pin)
-    if user is not None:
-        if user.is_active:
-            if user.siteuser.company == company:
+    if form.is_valid():
+        user = authenticate(username=form.cleaned_data['account'], password=form.cleaned_data['password'])
+        if user is not None and user.is_active:
+            if user.siteuser.company == form.cleaned_data['company']:
                 login(request, user)
-                return redirect('cdc:index')
-            else:
-                context = {'error': "Please fill out all fields before submitting."}
-        else:
-            context = {'error': "The user you requested was not found."}
-    else:
-        context = {}
-    return render(request, 'cdc/login.html', context)
+                return redirect('cdc:admin')
+
+    return render(request, 'cdc/login.html', {'form': form})
 
 
 def login_admin(request):
@@ -85,6 +78,7 @@ def login_admin(request):
     return render(request, 'cdc/admin.html')
 
 
+@login_required
 def settings(request):
     return render(request, 'cdc/settings.html')
 
@@ -142,7 +136,7 @@ def admin_dashboard(request):
 
 @user_passes_test(user_is_admin)
 def admin_password_reset(request):
-    pin_form = PinResetForm(request.POST)
+    pin_form = PinResetForm(request.POST or None)
 
     if pin_form.is_valid():
         user = get_object_or_404(User, username=pin_form.cleaned_data['account'])
@@ -154,7 +148,7 @@ def admin_password_reset(request):
 
 @user_passes_test(user_is_admin)
 def admin_delete_user(request):
-    delete_form = DeleteUserForm(request.POST)
+    delete_form = DeleteUserForm(request.POST or None)
 
     if delete_form.is_valid():
         user = get_object_or_404(User, username=delete_form.cleaned_data['account'])
@@ -165,7 +159,7 @@ def admin_delete_user(request):
 
 @user_passes_test(user_is_admin)
 def admin_new_user(request):
-    user_form = NewUserForm(request.POST)
+    user_form = NewUserForm(request.POST or None)
     if user_form.is_valid():
         user = user_form.save()
         create_user_uploads(user)
@@ -175,7 +169,7 @@ def admin_new_user(request):
 
 @user_passes_test(user_is_admin)
 def admin_new_admin(request):
-    admin_form = NewAdminForm(request.POST)
+    admin_form = NewAdminForm(request.POST or None)
     if admin_form.is_valid():
         admin = admin_form.save()
         return redirect(reverse('cdc:admin'))

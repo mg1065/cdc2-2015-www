@@ -18,7 +18,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("SECRET_KEY", 'cdc')
-if SECRET_KEY == 'setme':
+if SECRET_KEY == 'cdc':
     warnings.warn('SECRET_KEY not set')
 
 # SECURITY WARNING: don't run with debug turned on in production!

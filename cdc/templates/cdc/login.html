@@ -4,15 +4,16 @@
     <div id="login">
         <form action="{% url 'cdc:login' %}" method="post"><br/>
            Company name:
-            <br/><input type="text" name="company"/><br/>
+            <br/>{{ form.company }}<br/>
            Account number:
-            <br/><input type="text" name="account"/><br/>
+            <br/>{{ form.account }}<br/>
            PIN:
-           <br/><input type="password" name="pin" size="4" maxlength="4"/><br/><br/>
+           <br/>{{ form.password }}<br/><br/>
         <input type="submit" value="login"/>
+        {% csrf_token %}
         <input type="hidden" name="next" value="True"/>
         <br/><br/>
-            <p style="color:red">{{ error }}</p>
+            <p style="color:red">{{ form.errors }}</p>
         </form>
     </div>
 {% endblock %}

@@ -1,6 +1,16 @@
 from django import forms
 from django.contrib.auth.models import User
+from django.core.validators import RegexValidator
 from .models import Testimonial, SiteUser
+
+
+validate_account = RegexValidator(r'^[0-9]{4}\-[0-9]{2}$', message="Account numbers must take the form ####-##")
+
+
+class LoginForm(forms.Form):
+    account = forms.CharField(max_length=7, validators=[validate_account])
+    company = forms.CharField(max_length=100)
+    password = forms.CharField(max_length=4, widget=forms.PasswordInput)
 
 
 class UploadFileForm(forms.Form):
@@ -19,21 +29,20 @@ class TestimonialForm(forms.ModelForm):
 
 
 class NewUserForm(forms.Form):
-    account = forms.CharField(max_length=100)
+    account = forms.CharField(max_length=100, validators=[validate_account])
     company = forms.CharField(max_length=100)
     pin = forms.CharField(max_length=4, widget=forms.PasswordInput)
 
-    def save(self, commit=True):
+    def save(self):
         account = self.cleaned_data['account']
         pin = self.cleaned_data['pin']
         company = self.cleaned_data['company']
 
-        user = User(username=account, password=pin)
-        siteuser = SiteUser(company=company)
-        siteuser.user = user
-
-        if commit:
-            user.save()
+        user = User(username=account)
+        user.set_password(pin)
+        user.save()
+        user.siteuser.company = company
+        user.siteuser.save()
 
         return user
 
@@ -45,7 +54,7 @@ class NewAdminForm(forms.ModelForm):
 
 
 class PinResetForm(forms.Form):
-    account = forms.CharField(max_length=100)
+    account = forms.CharField(max_length=100, validators=[validate_account])
     pin = forms.CharField(max_length=4, widget=forms.PasswordInput)
 
 
@@ -58,5 +67,5 @@ class ListFileForm(forms.Form):
         ('incoming', 'Filings'),
         ('outgoing', 'Reports'),
     )
-    account = forms.CharField(max_length=100)
+    account = forms.CharField(max_length=100, validators=[validate_account])
     mode = forms.ChoiceField(choices=MODES)
