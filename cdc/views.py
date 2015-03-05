@@ -131,7 +131,12 @@ def reports(request):
 
 @user_passes_test(user_is_admin)
 def admin_dashboard(request):
-    return render(request, 'cdc/account.html')
+    accounts = None
+
+    if request.POST.get('list_users', False):
+        accounts = User.objects.all()
+
+    return render(request, 'cdc/account.html', {'accounts': accounts})
 
 
 @user_passes_test(user_is_admin)
@@ -187,30 +192,25 @@ def admin_delete_file(request):
 
 @user_passes_test(user_is_admin)
 def admin_list_user_files(request):
-    pass
+    file_form = ListFileForm(request.POST or None)
+
+    if file_form.is_valid():
+        account = get_object_or_404(User, username=file_form.cleaned_data['account'])
+        mode = file_form.cleaned_data['mode']
+
+        files = list_files(account, mode)
+        return render(request, 'cdc/admin/list_files.html', {'files': files, 'account': account.username, 'mode': mode})
+    else:
+        return redirect(reverse('cdc:admin'))
 
 
 @user_passes_test(user_is_admin)
 def admin(request):
-    message = ''
-    files = None
-    create = None
     accounts = None
-    if request.GET.get('user_button', False):
-        create = 'newuser'
-    elif request.GET.get('admin_button', False):
-        create = 'newadmin'
 
     # List a user's files
-    if request.GET.get('search', False):
-        files = list_files(request.GET.get('search', ''), '/' + request.GET.get('mode', ''))
-        if not files:
-            message += "No files found!\n"
-    if request.GET.get('list_users', False):
+    if request.POST.get('list_users', False):
         accounts = User.objects.all()
     if request.user and request.user.is_superuser:
-        return render(request, 'cdc/account.html',
-                      {'users': accounts, 'create': create, 'message': message, 'files': files,
-                       'mode': request.GET.get('mode', False), 'search': request.GET.get('search', False),
-                       'user': request.user})
+        return render(request, 'cdc/account.html', {'users': accounts, 'accounts': accounts})
     return redirect(reverse('cdc:login_admin'))

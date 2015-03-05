@@ -21,7 +21,7 @@ def is_admin(request):
 
 
 def list_files(account, mode):
-    targetdir = 'uploads/' + account.__str__() + mode
+    targetdir = os.path.join('uploads', account.username, mode)
     if os.path.exists(targetdir):
         return [f for f in listdir(targetdir)]
     else:

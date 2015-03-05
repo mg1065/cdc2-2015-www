@@ -35,24 +35,15 @@
             </select>
             <input type="submit" value="Search">
         </form>
-        {% if files %}
-        <div id="files">
-            <p>{{ search }}'s Files</p>
-            <ol>
-            {% for file in files %}
-                <li><a href="/uploads/{{ search }}/{{ mode }}/{{ file }}">{{ file }}</a> <a href="?search={{ search }}&mode=incoming&delete=uploads/{{ search }}/{{ mode }}/{{ file }}" style="color: red">delete</a></li>
-            {% endfor %}
-            </ol>
-        </div>
-        {% endif %}
-        {% if users %}
+        {% if accounts %}
         <table><tr><td><u>Account</u></td><td><u>Admin</u></td></tr>
-            {% for account in users %}
+            {% for account in accounts %}
                 <tr><td>{{ account }}</td><td>{{ account.is_superuser }}</td></tr>
             {% endfor %}
         </table>
         {% else %}
-            <form action="{% url 'cdc:admin' %}" method="get">
+        <form action="{% url 'cdc:admin' %}" method="post">
+            {% csrf_token %}
             <input type="submit" name="list_users" value="List User Accounts">
         </form>
         {% endif %}

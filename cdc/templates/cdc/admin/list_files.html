@@ -1,0 +1,19 @@
+{% extends 'cdc/base.html' %}
+{% block title %}Admin - List Files{% endblock %}
+{% block content %}
+<br /><br />
+<div id="account">
+    <h2>Admin Panel -- {{ user.username }}</h2>
+    <strong>Files that are {{ mode }} for {{ account }}</strong>
+    <ol>
+        {% for file in files %}
+        <li><a href="/uploads/{{ account }}/{{ mode }}/{{ file }}">{{ file }}</a></li>
+        {% empty %}
+        <li>No Files Found</li>
+        {% endfor %}
+    </ol>
+
+    <br /><br />
+    <a href="{% url 'cdc:admin' %}">&laquo; Back</a>
+</div>
+{% endblock %}
