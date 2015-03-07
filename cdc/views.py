@@ -45,7 +45,7 @@ def form(request):
     if form.is_valid():
         form.save()
         return redirect(reverse('cdc:testimonials'))
-    return render_to_response('cdc/form.html', {'form': form})
+    return render(request, 'cdc/form.html', {'form': form})
 
 
 def login_view(request):

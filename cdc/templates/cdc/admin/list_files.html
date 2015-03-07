@@ -9,6 +9,7 @@
         {% for file in files %}
         <li><a href="/uploads/{{ account }}/{{ mode }}/{{ file }}">{{ file }}</a>
             <form action="{% url 'cdc:admin_delete_file' %}" method="post">
+		{% csrf_token %}
                 <input type="hidden" name="account" value="{{ account }}" />
                 <input type="hidden" name="mode" value="{{ mode }}" />
                 <input type="hidden" name="file" value="{{ file }}" />
